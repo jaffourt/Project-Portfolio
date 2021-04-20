@@ -6,6 +6,6 @@
 
 #### Project 3. Sentence Space Comparisons
 
-#### Project 4. Hyperspectral Imagery and Machine Learning Based Processing
+#### Project 4. Compositional Semantics in NLP and Humans
 
 #### Project 5. Pathway Estimation Using Remotely Sensed Spectral-Terrain Data

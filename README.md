@@ -6,6 +6,6 @@
 
 #### Project 3. Sentence Space Comparisons
 
-#### Project 4. Compositional Semantics in NLP and Humans
+#### Project 4. Compositional Semantics in Natural Language Processing and Humans
 
 #### Project 5. Pathway Estimation Using Remotely Sensed Spectral-Terrain Data

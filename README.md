@@ -6,4 +6,4 @@
 
 #### Project 3. Pathway Estimation Using Remotely Sensed Spectral-Terrain Data
 
-#### Project 4. Compositional Semantics in Natural Language Processing and Humans
+#### Project 4. Compositional Semantics in Natural Language Processing and Human Cognition

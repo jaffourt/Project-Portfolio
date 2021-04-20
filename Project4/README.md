@@ -1,1 +1,1 @@
-#### Josef Affourtit - Project 4: Compositional Semantics in NLP and Humans
+#### Josef Affourtit - Project 4: Compositional Semantics in Natural Language Processing and Humans

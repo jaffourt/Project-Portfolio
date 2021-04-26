@@ -1,0 +1,79 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(ggcorrplot)
+library(ggpubr)
+
+EffectSizes <- read_excel("THE_DATA_BY_ROI_Lang.xlsx",sheet="EffectSizes")
+Volumes <- read_excel("THE_DATA_BY_ROI_Lang.xlsx",sheet="Volumes")
+Spcorr <- read_excel("THE_DATA_BY_ROI_Lang.xlsx",sheet="Spcorr")
+LateralizationEffectSizes <- read_excel("THE_DATA_BY_ROI_Lang.xlsx",sheet="LateralizationEffectSizes")
+LateralizationVolumes <- read_excel("THE_DATA_BY_ROI_Lang.xlsx",sheet="LateralizationVolumes")
+
+```
+
+
+```{r}
+#####################################################################
+############################ Language ###############################
+#####################################################################
+
+corr<-round(cor(EffectSizes %>% select(IFGorb, IFG, MFG, AntTemp, PostTemp)),3)
+p1<-ggcorrplot(corr, type="lower", lab=TRUE, ggtheme = theme_classic2(), colors = c("#292929", "#757575", "#ffffff")) + ggtitle('EffectSizes')
+
+corr<-round(cor(Volumes %>% select(IFGorb, IFG, MFG, AntTemp, PostTemp)),3)
+p2<-ggcorrplot(corr, type="lower", lab=TRUE, ggtheme = theme_classic2(), colors = c("#292929", "#757575", "#ffffff")) + ggtitle('Volumes')
+
+corr<-round(cor(Spcorr %>% select(IFGorb, IFG, MFG, AntTemp, PostTemp)),3)
+p3<-ggcorrplot(corr, type="lower", lab=TRUE, ggtheme = theme_classic2(), colors = c("#292929", "#757575", "#ffffff")) + ggtitle('Spcorr')
+
+corr<-round(cor(LateralizationEffectSizes %>% select(IFGorb, IFG, MFG, AntTemp, PostTemp)),3)
+p4<-ggcorrplot(corr, type="lower", lab=TRUE, ggtheme = theme_classic2(), colors = c("#292929", "#757575", "#ffffff")) + ggtitle('LateralizationEffectSizes')
+
+corr<-round(cor(LateralizationVolumes %>% select(IFGorb, IFG, MFG, AntTemp, PostTemp)),3)
+p5<-ggcorrplot(corr, type="lower", lab=TRUE, ggtheme = theme_classic2(), colors = c("#292929", "#757575", "#ffffff")) + ggtitle('LateralizationVolumes')
+
+pl = list(p1,p2,p3,p4,p5)
+cowplot::save_plot('LANG.tiff',cowplot::plot_grid(plotlist = pl, nrow = 5), base_height = 15, base_width = 4.0)
+```
+
+```{r}
+
+EffectSizes <- read_excel("THE_DATA_BY_ROI_MDloc.xlsx",sheet="EffectSizes")
+Volumes <- read_excel("THE_DATA_BY_ROI_MDloc.xlsx",sheet="Volumes")
+Spcorr <- read_excel("THE_DATA_BY_ROI_MDloc.xlsx",sheet="Spcorr")
+LateralizationEffectSizes <- read_excel("THE_DATA_BY_ROI_MDloc.xlsx",sheet="LateralizationEffectSizes")
+LateralizationVolumes <- read_excel("THE_DATA_BY_ROI_MDloc.xlsx",sheet="LateralizationVolumes")
+
+```
+
+
+```{r}
+#####################################################################
+############################## MDloc ################################
+#####################################################################
+
+corr<-round(cor(EffectSizes %>% select(Precentral_A_precG, Precentral_B_IFGop, antParietal, insula, medialFrontal, midFrontal, midFrontalOrb, midParietal, postParietal, supFrontal)),3)
+p1<-ggcorrplot(corr, type="lower", lab=TRUE, ggtheme = theme_classic2(), colors = c("#292929", "#757575", "#ffffff")) + ggtitle('EffectSizes')
+
+corr<-round(cor(EffectSizes %>% select(Precentral_A_precG, Precentral_B_IFGop, antParietal, insula, medialFrontal, midFrontal, midFrontalOrb, midParietal, postParietal, supFrontal)),3)
+p2<-ggcorrplot(corr, type="lower", lab=TRUE, ggtheme = theme_classic2(), colors = c("#292929", "#757575", "#ffffff")) + ggtitle('Volumes')
+
+corr<-round(cor(EffectSizes %>% select(Precentral_A_precG, Precentral_B_IFGop, antParietal, insula, medialFrontal, midFrontal, midFrontalOrb, midParietal, postParietal, supFrontal)),3)
+p3<-ggcorrplot(corr, type="lower", lab=TRUE, ggtheme = theme_classic2(), colors = c("#292929", "#757575", "#ffffff")) + ggtitle('Spcorr')
+
+corr<-round(cor(EffectSizes %>% select(Precentral_A_precG, Precentral_B_IFGop, antParietal, insula, medialFrontal, midFrontal, midFrontalOrb, midParietal, postParietal, supFrontal)),3)
+p4<-ggcorrplot(corr, type="lower", lab=TRUE, ggtheme = theme_classic2(), colors = c("#292929", "#757575", "#ffffff")) + ggtitle('LateralizationEffectSizes')
+
+corr<-round(cor(EffectSizes %>% select(Precentral_A_precG, Precentral_B_IFGop, antParietal, insula, medialFrontal, midFrontal, midFrontalOrb, midParietal, postParietal, supFrontal)),3)
+p5<-ggcorrplot(corr, type="lower", lab=TRUE, ggtheme = theme_classic2(), colors = c("#292929", "#757575", "#ffffff")) + ggtitle('LateralizationVolumes')
+
+pl = list(p1,p2,p3,p4,p5)
+cowplot::save_plot('MD.tiff',cowplot::plot_grid(plotlist = pl, nrow = 5), base_height = 30, base_width = 10)
+```

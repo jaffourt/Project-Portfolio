@@ -1,0 +1,143 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(ggplot2)
+library(ggpubr)
+library(dplyr)
+library(reshape2)
+library(readxl)
+library(cowplot)
+
+
+
+EffectSizes <- read_excel("THE DATA BY ROI.xlsx",sheet="EffectSizes")
+Volumes <- read_excel("THE DATA BY ROI.xlsx",sheet="Volumes")
+Spcorr <- read_excel("THE DATA BY ROI.xlsx",sheet="Spcorr")
+LateralizationEffectSizes <- read_excel("THE DATA BY ROI.xlsx",sheet="LateralizationEffectSizes")
+LateralizationVolumes <- read_excel("THE DATA BY ROI.xlsx",sheet="LateralizationVolumes")
+
+
+```
+
+
+```{r}
+
+EffectSizes<- bind_rows(
+    EffectSizes %>% filter(Lateralization=='left-lat') %>% rowwise() %>% mutate(Average=mean(c(IFGorb, IFG, MFG, AntTemp, PostTemp, AngG))), 
+    EffectSizes %>% filter(Lateralization=='right-lat') %>% rowwise() %>% mutate(Average=mean(c(RH_IFGorb, RH_IFG, RH_MFG, RH_AntTemp, RH_PostTemp, RH_AngG)))
+    )
+
+Volumes<- bind_rows(
+    Volumes %>% filter(Lateralization=='left-lat') %>% rowwise() %>% mutate(Average=mean(c(IFGorb, IFG, MFG, AntTemp, PostTemp, AngG))), 
+    Volumes %>% filter(Lateralization=='right-lat') %>% rowwise() %>% mutate(Average=mean(c(RH_IFGorb, RH_IFG, RH_MFG, RH_AntTemp, RH_PostTemp, RH_AngG)))
+    )
+
+Spcorr<- bind_rows(
+    Spcorr %>% filter(Lateralization=='left-lat') %>% rowwise() %>% mutate(Average=mean(c(IFGorb, IFG, MFG, AntTemp, PostTemp, AngG))), 
+    Spcorr %>% filter(Lateralization=='right-lat') %>% rowwise() %>% mutate(Average=mean(c(RH_IFGorb, RH_IFG, RH_MFG, RH_AntTemp, RH_PostTemp, RH_AngG)))
+    )
+
+LateralizationEffectSizes<-LateralizationEffectSizes %>% 
+    rowwise() %>% 
+    mutate(Average=mean(c(IFGorb, IFG, MFG, AntTemp, PostTemp, AngG)))
+
+LateralizationVolumes<-LateralizationVolumes %>% 
+    rowwise() %>% 
+    mutate(Average=mean(c(IFGorb, IFG, MFG, AntTemp, PostTemp, AngG)))
+
+```
+
+
+
+```{r}
+
+#effect size + spcorr
+dat1<-melt(bind_rows(
+    EffectSizes %>% filter(Lateralization=='right-lat') %>% select(Session, RH_IFGorb, RH_IFG, RH_MFG, RH_AntTemp, RH_PostTemp, RH_AngG, Average) %>% 
+    rename(IFGorb=RH_IFGorb, IFG=RH_IFG, MFG=RH_MFG, AntTemp=RH_AntTemp, PostTemp=RH_PostTemp, AngG=RH_AngG), 
+    EffectSizes %>% filter(Lateralization=='left-lat') %>% select(Session, IFGorb, IFG, MFG, AntTemp, PostTemp, AngG, Average)
+))
+dat1$Measure = "Response Strength"
+
+dat2<-melt(bind_rows(
+    Spcorr %>% filter(Lateralization=='right-lat') %>% select(Session, RH_IFGorb, RH_IFG, RH_MFG, RH_AntTemp, RH_PostTemp, RH_AngG, Average) %>% 
+    rename(IFGorb=RH_IFGorb, IFG=RH_IFG, MFG=RH_MFG, AntTemp=RH_AntTemp, PostTemp=RH_PostTemp, AngG=RH_AngG), 
+    Spcorr %>% filter(Lateralization=='left-lat') %>% select(Session, IFGorb, IFG, MFG, AntTemp, PostTemp, AngG, Average)
+))
+dat2$Measure = "Spatial Correlations"
+
+# volume 
+dat3<-melt(bind_rows(
+    Volumes %>% filter(Lateralization=='right-lat') %>% select(Session, RH_IFGorb, RH_IFG, RH_MFG, RH_AntTemp, RH_PostTemp, RH_AngG, Average) %>% 
+    rename(IFGorb=RH_IFGorb, IFG=RH_IFG, MFG=RH_MFG, AntTemp=RH_AntTemp, PostTemp=RH_PostTemp, AngG=RH_AngG), 
+    Volumes %>% filter(Lateralization=='left-lat') %>% select(Session, IFGorb, IFG, MFG, AntTemp, PostTemp, AngG, Average)
+))
+dat3$Measure = "Activation Extent"
+
+# lateralizations
+dat4<-melt(LateralizationEffectSizes)
+dat4$Measure = "Lateralization (Response Strength)"
+
+dat5<-melt(LateralizationVolumes)
+dat5$Measure = "Lateralization (Activation Extent)"
+
+
+```
+
+
+```{r}
+
+resp<-ggplot(dat1,aes(x=value)) + 
+    facet_grid(vars(variable), vars(Measure)) + 
+    geom_histogram(binwidth = 2 * IQR(dat1$value) / length(dat1$value)^(1/3)) + 
+    geom_vline(aes(xintercept=0),linetype="dashed") +
+    scale_x_continuous(limits = c(-1.5, 4))
+resp
+ggsave('response_strength.tiff',resp)
+
+```
+
+```{r}
+spcorr<-ggplot(dat2,aes(x=value)) + 
+    facet_grid(vars(variable), vars(Measure)) + 
+    geom_histogram(binwidth = 2 * IQR(dat2$value) / length(dat2$value)^(1/3)) + 
+    geom_vline(aes(xintercept=0),linetype="dashed") 
+    scale_x_continuous(limits = c(-1.4, 3))
+spcorr
+ggsave('spatial_corr.tiff',spcorr)
+```
+
+```{r}
+volume<-ggplot(dat3,aes(x=value)) + 
+    facet_grid(vars(variable), vars(Measure)) + 
+    geom_histogram() + 
+    geom_vline(aes(xintercept=0),linetype="dashed")
+
+volume
+ggsave('active_extent.tiff',volume)
+```
+
+
+```{r}
+lat1<-ggplot(dat4,aes(x=value)) + 
+    facet_grid(vars(variable), vars(Measure)) + 
+    geom_histogram(binwidth = 2 * IQR(dat4$value) / length(dat4$value)^(1/3)) + 
+    geom_vline(aes(xintercept=0),linetype="dashed") + 
+    scale_x_continuous(limits = c(-2, 3))
+lat1
+ggsave('lateralization_resp.tiff',lat1)
+```
+
+
+```{r}
+lat2<-ggplot(dat5,aes(x=value)) + 
+    facet_grid(vars(variable), vars(Measure)) + 
+    geom_histogram(binwidth=0.1) + 
+    geom_vline(aes(xintercept=0),linetype="dashed") 
+lat2
+ggsave('lateralization_volume.tiff',lat2)
+```
+

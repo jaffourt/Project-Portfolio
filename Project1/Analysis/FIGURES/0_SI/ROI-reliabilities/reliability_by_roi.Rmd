@@ -1,0 +1,91 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(ggpubr)
+library(tidyverse)
+library(readxl)
+
+
+AcrossRuns                  <- read_excel("SETS BY ROI.xlsx",sheet="AcrossRuns")
+AcrossRunsLat               <- read_excel("SETS BY ROI.xlsx",sheet="AcrossRuns (Lat)")
+AcrossSessions_Spcorr       <- read_excel("SETS BY ROI.xlsx",sheet="AcrossSessions_Spcorr")
+AcrossSessions_Spcorr_Lat   <- read_excel("SETS BY ROI.xlsx",sheet="AcrossSessions_Spcorr (Lat)")
+AcrossSessions_Interval     <- read_excel("SETS BY ROI.xlsx",sheet="AcrossSessions_Interval")
+AcrossSessions_Interval_Lat <- read_excel("SETS BY ROI.xlsx",sheet="AcrossSessions_Interval (Lat)")
+
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+```{r}
+
+f1<-ggscatter(AcrossSessions_Spcorr %>% filter(Measure== "EffectSizes") %>% select(UID,Measure,IFGorb:AngG,Set) %>% gather(ROI,value,IFGorb:AngG) %>% spread(Set,value),x='Lowest',y='SecondLowest',title="Reliability of Response Strength") + stat_cor(label.y=4) + geom_smooth(method=lm) + facet_wrap(~ROI, scale="free") + theme_pubclean() + font("title", size = 14, face = "bold.italic")+
+  font("xlab", size = 12)+
+ font("ylab", size = 12)+
+ font("xy.text", size = 12)
+
+f2<-ggscatter(AcrossSessions_Spcorr %>% filter(Measure== "Spcorr") %>% select(UID,Measure,IFGorb:AngG,Set) %>% gather(ROI,value,IFGorb:AngG) %>% spread(Set,value),x='Lowest',y='SecondLowest',title="Reliability of Spatial Correlation") + stat_cor(label.y=4) + geom_smooth(method=lm) + facet_wrap(~ROI, scale="free") + theme_pubclean() + font("title", size = 14, face = "bold.italic")+
+  font("xlab", size = 12)+
+ font("ylab", size = 12)+
+ font("xy.text", size = 12)
+
+f3<-ggscatter(AcrossSessions_Spcorr %>% filter(Measure== "Volumes") %>% select(UID,Measure,IFGorb:AngG,Set) %>% gather(ROI,value,IFGorb:AngG) %>% spread(Set,value),x='Lowest',y='SecondLowest',title="Reliability of Activation Extent") + stat_cor(label.y=2300) + geom_smooth(method=lm) + facet_wrap(~ROI, scale="free") + theme_pubclean() + font("title", size = 14, face = "bold.italic")+
+  font("xlab", size = 12)+
+ font("ylab", size = 12)+
+ font("xy.text", size = 12)
+
+f4<-ggscatter(AcrossSessions_Spcorr_Lat %>% filter(Measure== "LateralizationEffectSizes") %>% select(UID,Measure,IFGorb:AngG,Set) %>% gather(ROI,value,IFGorb:AngG) %>% spread(Set,value),x='Lowest',y='SecondLowest',title="Reliability of Response Strength Lateralization") + stat_cor(label.y=6) + geom_smooth(method=lm) + facet_wrap(~ROI, scale="free") + theme_pubclean() + font("title", size = 14, face = "bold.italic")+
+  font("xlab", size = 12)+
+ font("ylab", size = 12)+
+ font("xy.text", size = 12)
+
+f5<-ggscatter(AcrossSessions_Spcorr_Lat %>% filter(Measure== "LateralizationVolumes") %>% select(UID,Measure,IFGorb:AngG,Set) %>% gather(ROI,value,IFGorb:AngG) %>% spread(Set,value),x='Lowest',y='SecondLowest',title="Reliability of Activation Extent Lateralization") + stat_cor(label.y=4) + geom_smooth(method=lm) + facet_wrap(~ROI, scale="free") + theme_pubclean() + font("title", size = 14, face = "bold.italic")+
+  font("xlab", size = 12)+
+ font("ylab", size = 12)+
+ font("xy.text", size = 12)
+
+ggsave('sess_spcorr_ES.tiff',f1)
+ggsave('sess_spcorr_spcorr.tiff',f2)
+ggsave('sess_spcorr_volumes.tiff',f3)
+ggsave('sess_spcorr_lat_ES.tiff',f4)
+ggsave('sess_spcorr_lat_volumes.tiff',f5)
+
+```
+
+```{r}
+f1<-ggscatter(AcrossSessions_Interval %>% filter(Measure== "EffectSize") %>% select(UID,Measure,IFGorb:AngG,Set) %>% gather(ROI,value,IFGorb:AngG) %>% spread(Set,value),x='Earliest',y='Latest',title="Reliability of Response Strength") + stat_cor(label.y=4) + geom_smooth(method=lm) + facet_wrap(~ROI, scale="free") + theme_pubclean() + font("title", size = 14, face = "bold.italic")+
+  font("xlab", size = 12)+
+ font("ylab", size = 12)+
+ font("xy.text", size = 12)
+
+f2<-ggscatter(AcrossSessions_Interval %>% filter(Measure== "Spcorr") %>% select(UID,Measure,IFGorb:AngG,Set) %>% gather(ROI,value,IFGorb:AngG) %>% spread(Set,value),x='Earliest',y='Latest',title="Reliability of Spatial Correlation") + stat_cor(label.y=4) + geom_smooth(method=lm) + facet_wrap(~ROI, scale="free") + theme_pubclean() + font("title", size = 14, face = "bold.italic")+
+  font("xlab", size = 12)+
+ font("ylab", size = 12)+
+ font("xy.text", size = 12)
+
+f3<-ggscatter(AcrossSessions_Interval %>% filter(Measure== "Volumes") %>% select(UID,Measure,IFGorb:AngG,Set) %>% gather(ROI,value,IFGorb:AngG) %>% spread(Set,value),x='Earliest',y='Latest',title="Reliability of Activation Extent") + stat_cor(label.y=2300) + geom_smooth(method=lm) + facet_wrap(~ROI, scale="free") + theme_pubclean() + font("title", size = 14, face = "bold.italic")+
+  font("xlab", size = 12)+
+ font("ylab", size = 12)+
+ font("xy.text", size = 12)
+
+f4<-ggscatter(AcrossSessions_Interval_Lat %>% filter(Measure== "LateralizationEffectSizes") %>% select(UID,Measure,IFGorb:AngG,Set) %>% gather(ROI,value,IFGorb:AngG) %>% spread(Set,value),x='Earliest',y='Latest',title="Reliability of Response Strength Lateralization") + stat_cor(label.y=6) + geom_smooth(method=lm) + facet_wrap(~ROI, scale="free") + theme_pubclean() + font("title", size = 14, face = "bold.italic")+
+  font("xlab", size = 12)+
+ font("ylab", size = 12)+
+ font("xy.text", size = 12)
+
+f5<-ggscatter(AcrossSessions_Interval_Lat %>% filter(Measure== "LateralizationVolumes") %>% select(UID,Measure,IFGorb:AngG,Set) %>% gather(ROI,value,IFGorb:AngG) %>% spread(Set,value),x='Earliest',y='Latest',title="Reliability of Activation Extent Lateralization") + stat_cor(label.y=4) + geom_smooth(method=lm) + facet_wrap(~ROI, scale="free") + theme_pubclean() + font("title", size = 14, face = "bold.italic")+
+  font("xlab", size = 12)+
+ font("ylab", size = 12)+
+ font("xy.text", size = 12)
+
+ggsave('sess_interval_ES.tiff',f1)
+ggsave('sess_interval_spcorr.tiff',f2)
+ggsave('sess_interval_volumes.tiff',f3)
+ggsave('sess_interval_lat_ES.tiff',f4)
+ggsave('sess_interval_lat_volumes.tiff',f5)
+```
+

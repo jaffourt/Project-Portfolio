@@ -1,0 +1,452 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(grid)
+library(cowplot)
+library(readxl)
+
+runs <- read_excel("THE_DATASET_703_MDLoc.xlsx", sheet="AcrossRuns")
+low_spcorr <- read_excel("THE_DATASET_703_MDLoc.xlsx", sheet="AcrossSessions_LowestSpcorr")
+long_interval <- read_excel("THE_DATASET_703_MDLoc.xlsx", sheet="AcrossSessions_LongestInterval")
+
+##################################################################
+###### Add category tags to differentiate the participants #######
+##################################################################
+
+low_spcorr$Category='2ndLowestSpcorr'
+low_spcorr[seq(1,nrow(low_spcorr),2),]$Category='LowestSpcorr'
+
+long_interval$Category='Latest'
+long_interval[seq(1,nrow(long_interval),2),]$Category='Earliest'
+
+low_spcorr
+```
+
+
+
+```{r}
+#####################################################################
+######### Using the dominant hemisphere for each individual #########
+#####################################################################
+
+AcrossRuns <- bind_rows(
+  runs %>% filter(Lateralization=='left-lat') %>% 
+    select(Session, 
+           LH_HE_spcorr, 
+           LH_HE_volume_odd, 
+           LH_HE_ES_odd, 
+           Lateralization_volume_odd, 
+           Lateralization_ES_odd, 
+           LH_HE_volume_even, 
+           LH_HE_ES_even, 
+           Lateralization_volume_even, 
+           Lateralization_ES_even) %>% 
+    rename(HE_spcorr = LH_HE_spcorr, 
+           HE_volume_odd = LH_HE_volume_odd, 
+           HE_ES_odd = LH_HE_ES_odd,
+           HE_volume_even = LH_HE_volume_even, 
+           HE_ES_even = LH_HE_ES_even), 
+  
+  runs %>% filter(Lateralization=='right-lat') %>% 
+    select(Session, 
+           RH_HE_spcorr, 
+           RH_HE_volume_odd, 
+           RH_HE_ES_odd, 
+           Lateralization_volume_odd, 
+           Lateralization_ES_odd, 
+           RH_HE_volume_even, 
+           RH_HE_ES_even, 
+           Lateralization_volume_even, 
+           Lateralization_ES_even) %>% 
+    rename(HE_spcorr = RH_HE_spcorr, 
+           HE_volume_odd = RH_HE_volume_odd, 
+           HE_ES_odd = RH_HE_ES_odd,
+           HE_volume_even = RH_HE_volume_even, 
+           HE_ES_even = RH_HE_ES_even)
+)
+
+AcrossSessions_LowestSpcorr <- bind_rows(
+  low_spcorr %>% filter(Lateralization=='left-lat') %>% 
+    select(Session, 
+           LH_HE_spcorr, 
+           LH_HE_volume_all, 
+           LH_HE_ES_all, 
+           Lateralization_volume_all, 
+           Lateralization_ES_all, 
+           Category) %>% 
+    rename(HE_spcorr = LH_HE_spcorr, 
+           HE_volume = LH_HE_volume_all, 
+           HE_ES = LH_HE_ES_all), 
+  
+  low_spcorr %>% filter(Lateralization=='right-lat') %>% 
+    select(Session, 
+           RH_HE_spcorr, 
+           RH_HE_volume_all, 
+           RH_HE_ES_all, 
+           Lateralization_volume_all, 
+           Lateralization_ES_all, 
+           Category) %>% 
+    rename(HE_spcorr=RH_HE_spcorr, 
+           HE_volume=RH_HE_volume_all, 
+           HE_ES=RH_HE_ES_all)
+  ) %>% separate(Session, c('UID'), remove=FALSE) %>% arrange(UID,Category)
+
+AcrossSessions_LongestInterval <- bind_rows(
+  long_interval %>% filter(Lateralization=='left-lat') %>% 
+    select(Session, 
+           LH_HE_spcorr, 
+           LH_HE_volume_all, 
+           LH_HE_ES_all, 
+           Lateralization_volume_all, 
+           Lateralization_ES_all, 
+           Category) %>% 
+    rename(HE_spcorr=LH_HE_spcorr, 
+           HE_volume=LH_HE_volume_all, 
+           HE_ES=LH_HE_ES_all), 
+  long_interval %>% filter(Lateralization=='right-lat') %>% 
+    select(Session, 
+           RH_HE_spcorr, 
+           RH_HE_volume_all, 
+           RH_HE_ES_all, 
+           Lateralization_volume_all, 
+           Lateralization_ES_all, 
+           Category) %>% 
+    rename(HE_spcorr=RH_HE_spcorr, 
+           HE_volume=RH_HE_volume_all, 
+           HE_ES=RH_HE_ES_all)
+  ) %>% separate(Session, c('UID'), remove=FALSE) %>% arrange(UID,Category)
+
+
+```
+
+```{r}
+######################################################################################
+########## Comparing sessions with the worst and best spatial correlations ###########
+######################################################################################
+
+AcrossSessions_LowestSpcorr <- 
+  inner_join(
+  AcrossSessions_LowestSpcorr %>% filter(Category=='LowestSpcorr') %>%
+    mutate(
+      HE_spcorr_LowestSpcorr = HE_spcorr,
+      HE_volume_LowestSpcorr = HE_volume,
+      HE_ES_LowestSpcorr = HE_ES,
+      Lateralization_volume_LowestSpcorr = Lateralization_volume_all,
+      Lateralization_ES_LowestSpcorr = Lateralization_ES_all) %>%
+    select(
+      UID,
+      HE_spcorr_LowestSpcorr,
+      HE_volume_LowestSpcorr,
+      HE_ES_LowestSpcorr,
+      Lateralization_volume_LowestSpcorr,
+      Lateralization_ES_LowestSpcorr
+    ),
+          
+  AcrossSessions_LowestSpcorr %>% filter(Category=='2ndLowestSpcorr') %>% 
+    mutate(
+      HE_spcorr_2ndLowestSpcorr = HE_spcorr,
+      HE_volume_2ndLowestSpcorr = HE_volume,
+      HE_ES_2ndLowestSpcorr = HE_ES,
+      Lateralization_volume_2ndLowestSpcorr = Lateralization_volume_all,
+      Lateralization_ES_2ndLowestSpcorr = Lateralization_ES_all) %>%
+    select(
+      UID,
+      HE_spcorr_2ndLowestSpcorr,
+      HE_volume_2ndLowestSpcorr,
+      HE_ES_2ndLowestSpcorr,
+      Lateralization_volume_2ndLowestSpcorr,
+      Lateralization_ES_2ndLowestSpcorr
+    ),
+  by=c('UID')
+) 
+     
+################## Spatial correlation ################## 
+AcrossSessions_LowestSpcorr_Histogram <- AcrossSessions_LowestSpcorr %>% gather(Name, HE_spcorr, c(HE_spcorr_LowestSpcorr, HE_spcorr_2ndLowestSpcorr)) %>% select(UID, Name, HE_spcorr)
+p1 <- ggplot(AcrossSessions_LowestSpcorr_Histogram) +
+  geom_histogram(aes(x=HE_spcorr),binwidth=0.05) + theme_classic() + geom_vline(aes(xintercept=0),linetype="dashed") + 
+  xlab('spcorr') + xlim(c(-0.6, 2.1)) + ylim(c(0,60)) + 
+  annotate(geom = 'label', 
+           label = paste("paste(bold(Avg) , bold(\" = \"))", round(mean(AcrossSessions_LowestSpcorr_Histogram$HE_spcorr), 3), sep="~"),
+           size = 4,
+           parse=TRUE,
+           label.padding = unit(0.3, "lines"),
+           label.r = unit(0, "lines"),
+           x = -Inf, 
+           y = Inf, hjust = 0, vjust = 1)
+p1
+
+p2 <- ggplot(AcrossSessions_LowestSpcorr, aes(x=HE_spcorr_LowestSpcorr, y=HE_spcorr_2ndLowestSpcorr)) +
+  geom_point() +
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() + 
+  annotation_custom(grobTree(textGrob(paste("r =", round(
+    cor(AcrossSessions_LowestSpcorr$HE_spcorr_LowestSpcorr, AcrossSessions_LowestSpcorr$HE_spcorr_2ndLowestSpcorr),
+    3) ), x = 0.02, y = 0.95, hjust = 0, gp = gpar(col = "black", fontface = "bold"))))
+p2
+
+################### Response Strength  ################### 
+p3 <- ggplot(AcrossSessions_LowestSpcorr, aes(x=HE_ES_LowestSpcorr, y=HE_ES_2ndLowestSpcorr)) +
+  geom_point() + 
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() + ylim(c(-2,4)) + xlim(c(-1, 4)) +
+  annotate(geom = 'label', 
+           label = paste("paste(bold(r) , bold(\" = \"))", 
+              round(cor(AcrossSessions_LowestSpcorr$HE_ES_LowestSpcorr, AcrossSessions_LowestSpcorr$HE_ES_2ndLowestSpcorr), 3), sep="~"),
+           size = 4,
+           parse=TRUE,
+           label.padding = unit(0.3, "lines"),
+           label.r = unit(0, "lines"),
+           x = -Inf, 
+           y = Inf, hjust = 0, vjust = 1)
+p3
+
+################### Activation Extent #################### 
+p4 <- ggplot(AcrossSessions_LowestSpcorr, aes(x=HE_volume_LowestSpcorr, y=HE_volume_2ndLowestSpcorr)) +
+  geom_point() +
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() + ylim(c(0,10000)) + xlim(c(0, 10000)) + 
+    annotate(geom = 'label', 
+           label = paste("paste(bold(r) , bold(\" = \"))", 
+              round(cor(AcrossSessions_LowestSpcorr$HE_volume_LowestSpcorr, AcrossSessions_LowestSpcorr$HE_volume_2ndLowestSpcorr), 3), sep="~"),
+           size = 4,
+           parse=TRUE,
+           label.padding = unit(0.3, "lines"),
+           label.r = unit(0, "lines"),
+           x = -Inf, 
+           y = Inf, hjust = 0, vjust = 1)
+p4
+
+################### Lateralization Activation Extent #################### 
+p5 <- ggplot(AcrossSessions_LowestSpcorr, aes(x=Lateralization_volume_LowestSpcorr, y=Lateralization_volume_2ndLowestSpcorr)) +
+  geom_point() +
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() + ylim(c(-1,1)) + xlim(c(-1, 1)) + 
+  annotate(geom = 'label', 
+           label = paste("paste(bold(r) , bold(\" = \"))", 
+              round(cor(AcrossSessions_LowestSpcorr$Lateralization_volume_LowestSpcorr, AcrossSessions_LowestSpcorr$Lateralization_volume_2ndLowestSpcorr), 3), sep="~"),
+           size = 4,
+           parse=TRUE,
+           label.padding = unit(0.3, "lines"),
+           label.r = unit(0, "lines"),
+           x = -Inf, 
+           y = Inf, hjust = 0, vjust = 1)
+p5
+
+################### Lateralization Response Strength #################### 
+p6 <- ggplot(AcrossSessions_LowestSpcorr, aes(x=Lateralization_ES_LowestSpcorr, y=Lateralization_ES_2ndLowestSpcorr)) +
+  geom_point() +
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() + ylim(c(-2.5,3)) + xlim(c(-2.5, 3)) + 
+  annotate(geom = 'label', 
+           label = paste("paste(bold(r) , bold(\" = \"))", 
+              round(cor(AcrossSessions_LowestSpcorr$Lateralization_ES_LowestSpcorr, AcrossSessions_LowestSpcorr$Lateralization_ES_2ndLowestSpcorr), 3), sep="~"),
+           size = 4,
+           parse=TRUE,
+           label.padding = unit(0.3, "lines"),
+           label.r = unit(0, "lines"),
+           x = -Inf, 
+           y = Inf, hjust = 0, vjust = 1)
+p6
+
+################### (Optional) Combine into 5 row plot #################### 
+pl = list(p1,p3,p4,p5,p6)
+g<- cowplot::plot_grid(plotlist = pl, nrow = 5) + cowplot::draw_plot_label("Sessions with lowest spatial correlations")
+cowplot::save_plot('sessions_across_spcorr.tiff',cowplot::plot_grid(plotlist = pl, nrow = 5), base_height = 15, base_width = 4.0)
+g
+```
+
+
+```{r}
+
+########################################################################################################
+#################  Comparing within each session across even and odd numbered runs #####################
+########################################################################################################
+
+################## Spatial correlation ################## 
+p1 <- ggplot(AcrossRuns) +
+  geom_histogram(aes(x=HE_spcorr), binwidth=0.05) + theme_classic() + geom_vline(aes(xintercept=0),linetype="dashed") + 
+  xlab('spcorr') + xlim(c(-0.6, 2.1)) + ylim(c(0,60)) + 
+  annotate(geom = 'label', 
+           label = paste("paste(bold(Avg) , bold(\" = \"))", round(mean(AcrossRuns$HE_spcorr), 3), sep="~"),
+           size = 4,
+           parse=TRUE,
+           label.padding = unit(0.3, "lines"),
+           label.r = unit(0, "lines"),
+           x = -Inf, 
+           y = Inf, hjust = 0, vjust = 1)
+p1
+
+################### Response Strength  ################### 
+p2 <- ggplot(AcrossRuns, aes(x=HE_ES_odd, y=HE_ES_even)) +
+  geom_point() + ylim(c(-2,4)) + xlim(c(-1, 4)) +
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() + 
+  annotate(geom = 'label', 
+           label = paste("paste(bold(r) , bold(\" = \"))", 
+              round(cor(AcrossRuns$HE_ES_odd, AcrossRuns$HE_ES_even), 3), sep="~"),
+           size = 4,
+           parse=TRUE,
+           label.padding = unit(0.3, "lines"),
+           label.r = unit(0, "lines"),
+           x = -Inf, 
+           y = Inf, hjust = 0, vjust = 1)
+p2
+
+################### Activation Extent #################### 
+p3 <- ggplot(AcrossRuns, aes(x=HE_volume_odd, y=HE_volume_even)) +
+  geom_point() +
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() +  ylim(c(0,10000)) + xlim(c(0, 10000)) + 
+  annotate(geom = 'label', 
+           label = paste("paste(bold(r) , bold(\" = \"))", 
+              round(cor(AcrossRuns$HE_volume_odd, AcrossRuns$HE_volume_even), 3), sep="~"),
+           size = 4,
+           parse=TRUE,
+           label.padding = unit(0.3, "lines"),
+           label.r = unit(0, "lines"),
+           x = -Inf, 
+           y = Inf, hjust = 0, vjust = 1)
+p3
+
+################### Lateralization Activation Extent #################### 
+p4 <- ggplot(AcrossRuns, aes(x=Lateralization_volume_odd, y=Lateralization_volume_even)) +
+  geom_point() +
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() + ylim(c(-1,1)) + xlim(c(-1, 1)) +
+  annotate(geom = 'label', 
+           label = paste("paste(bold(r) , bold(\" = \"))", 
+              round(cor(AcrossRuns$Lateralization_volume_odd, AcrossRuns$Lateralization_volume_even), 3), sep="~"),
+           size = 4,
+           parse=TRUE,
+           label.padding = unit(0.3, "lines"),
+           label.r = unit(0, "lines"),
+           x = -Inf, 
+           y = Inf, hjust = 0, vjust = 1)
+p4
+
+################### Lateralization Response Strength #################### 
+p5 <- ggplot(AcrossRuns, aes(x=Lateralization_ES_odd, y=Lateralization_ES_even)) +
+  geom_point() +
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() + ylim(c(-2.5,3)) + xlim(c(-2.5, 3)) + 
+  annotate(geom = 'label', 
+           label = paste("paste(bold(r) , bold(\" = \"))", 
+              round(cor(AcrossRuns$Lateralization_ES_odd, AcrossRuns$Lateralization_ES_even), 3), sep="~"),
+           size = 4,
+           parse=TRUE,
+           label.padding = unit(0.3, "lines"),
+           label.r = unit(0, "lines"),
+           x = -Inf, 
+           y = Inf, hjust = 0, vjust = 1)
+p5
+
+################### (Optional) Combine into 5 row plot #################### 
+pl = list(p1,p2,p3,p4,p5)
+g<- cowplot::plot_grid(plotlist = pl, nrow = 5) + cowplot::draw_plot_label("Within session across runs")
+g
+cowplot::save_plot('sessions_across_runs.tiff',cowplot::plot_grid(plotlist = pl, nrow = 5), base_height = 15, base_width = 4.0)
+
+```
+
+
+
+
+```{r}
+######################################################################################
+##############  Comparing sessions across the longest temporal window ################
+######################################################################################
+
+AcrossSessions_LongestInterval <- 
+  inner_join(
+  AcrossSessions_LongestInterval %>% filter(Category=='Earliest') %>%
+    mutate(
+      HE_spcorr_Earliest = HE_spcorr,
+      HE_volume_Earliest = HE_volume,
+      HE_ES_Earliest = HE_ES,
+      Lateralization_volume_Earliest = Lateralization_volume_all,
+      Lateralization_ES_Earliest = Lateralization_ES_all) %>%
+    select(
+      UID,
+      HE_spcorr_Earliest,
+      HE_volume_Earliest,
+      HE_ES_Earliest,
+      Lateralization_volume_Earliest,
+      Lateralization_ES_Earliest
+    ),
+          
+  AcrossSessions_LongestInterval %>% filter(Category=='Latest') %>% 
+    mutate(
+      HE_spcorr_Latest = HE_spcorr,
+      HE_volume_Latest = HE_volume,
+      HE_ES_Latest = HE_ES,
+      Lateralization_volume_Latest = Lateralization_volume_all,
+      Lateralization_ES_Latest = Lateralization_ES_all) %>%
+    select(
+      UID,
+      HE_spcorr_Latest,
+      HE_volume_Latest,
+      HE_ES_Latest,
+      Lateralization_volume_Latest,
+      Lateralization_ES_Latest
+    ),
+  by=c('UID')
+) 
+     
+################## Spatial correlation ################## 
+AcrossSessions_LongestInterval_Histogram <- AcrossSessions_LongestInterval %>% gather(Name, HE_spcorr, c(HE_spcorr_Earliest, HE_spcorr_Latest)) %>% select(UID, Name, HE_spcorr)
+p1 <- ggplot(AcrossSessions_LongestInterval_Histogram) +
+  geom_histogram(aes(x=HE_spcorr)) + theme_classic() + geom_vline(aes(xintercept=0),linetype="dashed") + 
+  xlab('spcorr') + 
+  annotation_custom(grobTree(textGrob(
+    paste("Avg=", round(mean(AcrossSessions_LongestInterval_Histogram$HE_spcorr),3)),
+    x = 0.02, y = 0.95, hjust = 0, gp = gpar(col = "black", fontface = "bold")))) 
+p1
+
+p2 <- ggplot(AcrossSessions_LongestInterval, aes(x=HE_spcorr_Earliest, y=HE_spcorr_Latest)) +
+  geom_point() +
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() + 
+  annotation_custom(grobTree(textGrob(paste("r =", round(
+    cor(AcrossSessions_LongestInterval$HE_spcorr_Earliest, AcrossSessions_LongestInterval$HE_spcorr_Latest),
+    3) ), x = 0.02, y = 0.95, hjust = 0, gp = gpar(col = "black", fontface = "bold"))))
+p2
+
+################### Response Strength  ################### 
+p3 <- ggplot(AcrossSessions_LongestInterval, aes(x=HE_ES_Earliest, y=HE_ES_Latest)) +
+  geom_point() +
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() + 
+  annotation_custom(grobTree(textGrob(paste("r =", round(
+    cor(AcrossSessions_LongestInterval$HE_ES_Earliest, AcrossSessions_LongestInterval$HE_ES_Latest),
+    3) ), x = 0.02, y = 0.95, hjust = 0, gp = gpar(col = "black", fontface = "bold"))))
+p3
+
+################### Activation Extent #################### 
+p4 <- ggplot(AcrossSessions_LongestInterval, aes(x=HE_volume_Earliest, y=HE_volume_Latest)) +
+  geom_point() +
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() + 
+  annotation_custom(grobTree(textGrob(paste("r =", round(
+    cor(AcrossSessions_LongestInterval$HE_volume_Earliest, AcrossSessions_LongestInterval$HE_volume_Latest),
+    3) ), x = 0.02, y = 0.95, hjust = 0, gp = gpar(col = "black", fontface = "bold"))))
+p4
+
+################### Lateralization Activation Extent #################### 
+p5 <- ggplot(AcrossSessions_LongestInterval, aes(x=Lateralization_volume_Earliest, y=Lateralization_volume_Latest)) +
+  geom_point() +
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() + 
+  annotation_custom(grobTree(textGrob(paste("r =", round(
+    cor(AcrossSessions_LongestInterval$Lateralization_volume_Earliest, AcrossSessions_LongestInterval$Lateralization_volume_Latest),
+    3) ), x = 0.02, y = 0.95, hjust = 0, gp = gpar(col = "black", fontface = "bold"))))
+p5
+
+################### Lateralization Response Strength #################### 
+p6 <- ggplot(AcrossSessions_LongestInterval, aes(x=Lateralization_ES_Earliest, y=Lateralization_ES_Latest)) +
+  geom_point() +
+  geom_smooth(method=lm, color='black', fullrange=TRUE) + theme_classic() + 
+  annotation_custom(grobTree(textGrob(paste("r =", round(
+    cor(AcrossSessions_LongestInterval$Lateralization_ES_Earliest, AcrossSessions_LongestInterval$Lateralization_ES_Latest),
+    3) ), x = 0.02, y = 0.95, hjust = 0, gp = gpar(col = "black", fontface = "bold"))))
+p6
+
+################### (Optional) Combine into 5 row plot #################### 
+pl = list(p1,p2,p3,p4,p5,p6)
+g<- cowplot::plot_grid(plotlist = pl, nrow = 6) + cowplot::draw_plot_label("Across sessions with longest temporal window")
+g
+cowplot::save_plot('sessions_across_temporal_window.tiff',cowplot::plot_grid(plotlist = pl, nrow = 6), base_height = 18, base_width = 4.0)
+```
+
+

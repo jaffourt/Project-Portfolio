@@ -1,0 +1,88 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(reshape2)
+library(readxl)
+
+
+EffectSizes <- read_excel("THE DATA BY ROI.xlsx",sheet="EffectSizes")
+Volumes <- read_excel("THE DATA BY ROI.xlsx",sheet="Volumes")
+Spcorr <- read_excel("THE DATA BY ROI.xlsx",sheet="Spcorr")
+LateralizationEffectSizes <- read_excel("THE DATA BY ROI.xlsx",sheet="LateralizationEffectSizes")
+LateralizationVolumes <- read_excel("THE DATA BY ROI.xlsx",sheet="LateralizationVolumes")
+
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+```{r}
+# example of how to plot a single ROI -- use this to pick a style
+ggplot(EffectSizes, aes(x=IFGorb)) + geom_histogram(fill="grey",color="black",binwidth=0.2) + geom_vline(aes(xintercept=0),color="black",linetype="dashed",size=1) + theme_classic() 
+
+```
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+```{r}
+
+EffectSizes<-EffectSizes %>% 
+    rowwise() %>% 
+    mutate(Average=mean(c(IFGorb, IFG, MFG, AntTemp, PostTemp, AngG)))
+
+Volumes<-Volumes %>% 
+    rowwise() %>% 
+    mutate(Average=mean(c(IFGorb, IFG, MFG, AntTemp, PostTemp, AngG)))
+
+Spcorr<-Spcorr %>% 
+    rowwise() %>% 
+    mutate(Average=mean(c(IFGorb, IFG, MFG, AntTemp, PostTemp, AngG)))
+
+LateralizationEffectSizes<-LateralizationEffectSizes %>% 
+    rowwise() %>% 
+    mutate(Average=mean(c(IFGorb, IFG, MFG, AntTemp, PostTemp, AngG)))
+
+LateralizationVolumes<-LateralizationVolumes %>% 
+    rowwise() %>% 
+    mutate(Average=mean(c(IFGorb, IFG, MFG, AntTemp, PostTemp, AngG)))
+
+```
+
+
+```{r}
+
+dat<-melt(EffectSizes[,c(1:7,14)])
+dat$Measure = "Response Strength"
+
+temp<-melt(Volumes[,c(1:7,14)])
+temp$Measure = "Activation Extent"
+dat<-rbind(dat,temp)
+
+temp<-melt(Spcorr[,c(1:7,14)])
+temp$Measure = "Spatial Correlations"
+dat<-rbind(dat,temp)
+
+temp<-melt(LateralizationEffectSizes[,c(1:8)])
+temp$Measure = "Lateralization (Response Strength)"
+dat<-rbind(dat,temp)
+
+temp<-melt(LateralizationVolumes[,c(1:8)])
+temp$Measure = "Lateralization (Activation Extent)"
+dat<-rbind(dat,temp)
+
+```
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+```{r}
+
+ggplot(dat,aes(x=value)) + facet_grid(vars(variable), vars(Measure)) + geom_histogram(fill="grey",color="black",binwidth=0.05) + geom_vline(aes(xintercept=0),color="red",linetype="dashed",size=1) + theme_classic() 
+
+#ggsave('test.tiff',g,height=24, width=20)
+```
+

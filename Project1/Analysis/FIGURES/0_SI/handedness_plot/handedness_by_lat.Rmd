@@ -1,0 +1,38 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(ggpubr)
+library(tidyverse)
+library(readxl)
+
+df<-read_excel("handedness.xlsx",sheet="data")
+
+```
+
+```{r}
+
+
+
+
+
+df<-df %>%count(Handedness, Lateralization)
+df$Handedness <- factor(df$Handedness, levels=c("Right", "Amb", "Left", "Unknown"))
+df$Lateralization <- factor(df$Lateralization, levels=c("left-lat","bi-lat","right-lat"))
+
+fig<-ggplot(df, aes(x=Handedness, y=n, fill=Lateralization)) + 
+  geom_bar(position = 'dodge', stat='identity') +
+  geom_text(aes(label=n), position=position_dodge(width=0.9), vjust=-0.25)
+
+
+fig<-ggplot(df, aes(fill=Lateralization,x=Handedness,y=n)) + geom_bar(position=position_dodge(.9),stat='identity') + ggtitle('Handedness counts by Lateralization (determined by activation extent)')
+ggsave('test.tiff',fig)
+
+```
+
